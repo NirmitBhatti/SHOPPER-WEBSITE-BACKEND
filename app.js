@@ -23,14 +23,12 @@ let sheets;
     sheets = await googleConnect();
     console.log("✅ Connected to Google Sheets!");
   } catch (error) {
-    console.error(error,"error");
+    console.error(error, "error");
   }
 })();
 
 app.use("/api/user", userRouter);
 
-app.listen(PORT, () => {
-  console.log(`🌍 Server running on http://localhost:${PORT}`);
-});
+export default app;
 
 export { sheets };
