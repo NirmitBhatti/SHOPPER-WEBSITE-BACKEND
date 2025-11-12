@@ -8,81 +8,36 @@ export const signupUser = async (req, res) => {
   try {
     const { name, email, password, phone, image } = req.body;
 
-    // ✅ Validate input
+    console.log("Incoming Signup Request:", req.body); // 🟩 Log body
+
     if (!name || !email || !password) {
       return res.status(400).json({
         message: "Name, email, and password are required",
         success: false,
-        status: 400,
-        body: {},
       });
     }
 
-    const sheets = await getSheets();
+    // 🟩 Example Google Sheets logic
+    const sheets = await getSheets(); // check if this runs fine
+    const spreadsheetId = process.env.SPREADSHEET_ID;
+    console.log("Using spreadsheet:", spreadsheetId);
 
-    // ✅ Fetch existing users
-    const getRows = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.SPREADSHEET_ID,
-      range: "Sheet1!A2:F",
-    });
+    // ... your sheet operations ...
 
-    const rows = getRows.data.values || [];
-    const emailExists = rows.find((row) => row[1] === email);
-
-    if (emailExists) {
-      console.log("⚠️ Email already exists:", email);
-      return res.status(400).json({
-        message: "Email Already Exists",
-        success: false,
-        status: 400,
-        body: {},
-      });
-    }
-
-    // ✅ Create JWT Token using your helper
-    const { token } = await tokenUser(email); // using email as id for Google Sheets case
-
-    // ✅ Append new user to Google Sheets
-    const timestamp = new Date().toLocaleString();
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: process.env.SPREADSHEET_ID,
-      range: "Sheet1!A:G", // added G for token column
-      valueInputOption: "USER_ENTERED",
-      resource: {
-        values: [
-          [name, email, password, phone || "", image || "", timestamp, token],
-        ],
-      },
-    });
-
-    console.log("✅ User created:", email);
-
-    // ✅ Masked response
-    const maskedName = name.slice(0, 3) + "xx xxxx";
-    const maskedEmail = email.slice(0, 3) + "xxxxxxx";
-    const maskedPhone = phone ? phone.slice(0, 4) + "xxxx" : "N/A";
-
-    return res.status(201).json({
-      message: "User Created Successfully",
-      status: 201,
+    res.status(200).json({
+      message: "Signup successful",
       success: true,
-      body: {
-        name: maskedName,
-        email: maskedEmail,
-        phone: maskedPhone,
-        token, // ✅ send token to frontend
-      },
     });
   } catch (error) {
-    console.log(error, "❌ Signup error");
-    return res.status(500).json({
-      message: "Internal Server Error",
-      success: false,
-      status: 500,
-      body: {},
+    console.error("❌ Signup Error:", error.message);
+    console.error(error.stack); // full trace
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
     });
   }
 };
+
 
 export const loginUser = async (req, res) => {
   try {
